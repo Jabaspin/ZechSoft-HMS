@@ -11,7 +11,7 @@ import {
   MoreVertical,
   Wifi,
   WifiOff,
-  Tool
+  Wrench as Tool
 } from 'lucide-react';
 import Card from '../common/Card';
 
