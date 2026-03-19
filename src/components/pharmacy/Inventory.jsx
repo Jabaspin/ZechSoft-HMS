@@ -1,6 +1,6 @@
 // src/components/pharmacy/Inventory.jsx
 import React, { useState } from 'react';
-import { Search, Filter, Plus, Package, AlertCircle, CheckCircle } from 'lucide-react';
+import { Search, Filter, Plus, Package, AlertCircle, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import Card from '../common/Card';
 
 const Inventory = () => {
@@ -12,48 +12,68 @@ const Inventory = () => {
     { id: 'MED-005', name: 'Paracetamol 500mg', category: 'Analgesics', batch: 'B-2024-005', stock: 500, minLevel: 100, expiry: '2026-01-30', supplier: 'MediSupply', status: 'normal' },
   ]);
 
+  const [expandedCard, setExpandedCard] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const toggleCard = (id) => {
+    setExpandedCard(expandedCard === id ? null : id);
+  };
+
+  const getStockPercentage = (stock, minLevel) => {
+    return Math.min((stock / minLevel) * 100, 100);
+  };
+
+  const isLowStock = (stock, minLevel) => stock < minLevel;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6 px-4 md:px-0">
+      {/* Header - Stack on mobile */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Inventory Management</h1>
-          <p className="text-gray-500 mt-1">Real-time stock tracking and management</p>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-800">Inventory Management</h1>
+          <p className="text-gray-500 mt-1 text-sm md:text-base">Real-time stock tracking and management</p>
         </div>
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
+          <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm md:text-base">
             <Package className="w-4 h-4" />
-            Stock Adjustment
+            <span>Stock Adjustment</span>
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md">
+          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md text-sm md:text-base">
             <Plus className="w-4 h-4" />
-            Add Medicine
+            <span>Add Medicine</span>
           </button>
         </div>
       </div>
 
-      <Card>
-        <div className="flex gap-4 mb-6">
+      <Card className="p-4 md:p-6">
+        {/* Search & Filter - Stack on mobile */}
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input 
               type="text" 
-              placeholder="Search medicines by name, ID, or category..." 
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Search medicines..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
             />
           </div>
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option>All Categories</option>
-            <option>Antibiotics</option>
-            <option>Cardiac</option>
-            <option>Diabetes</option>
-          </select>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-            <Filter className="w-4 h-4" />
-            Filters
-          </button>
+          <div className="flex gap-2 md:gap-4">
+            <select className="flex-1 md:flex-none px-3 md:px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base">
+              <option>All Categories</option>
+              <option>Antibiotics</option>
+              <option>Cardiac</option>
+              <option>Diabetes</option>
+            </select>
+            <button className="flex items-center justify-center gap-2 px-3 md:px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm md:text-base">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </button>
+          </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table - Hidden on mobile */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
@@ -75,23 +95,23 @@ const Inventory = () => {
                     <p className="text-xs text-gray-500">{item.supplier}</p>
                   </td>
                   <td className="py-4 px-4 text-sm text-gray-600">{item.category}</td>
-                  <td className="py-4 px-4 text-sm text-gray-600">{item.batch}</td>
+                  <td className="py-4 px-4 text-sm text-gray-600 font-mono">{item.batch}</td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-2">
                       <div className="w-16 bg-gray-200 rounded-full h-2">
                         <div 
-                          className={`h-2 rounded-full ${item.stock < item.minLevel ? 'bg-red-500' : 'bg-green-500'}`}
-                          style={{ width: `${Math.min((item.stock/item.minLevel)*100, 100)}%` }}
+                          className={`h-2 rounded-full ${isLowStock(item.stock, item.minLevel) ? 'bg-red-500' : 'bg-green-500'}`}
+                          style={{ width: `${getStockPercentage(item.stock, item.minLevel)}%` }}
                         ></div>
                       </div>
-                      <span className={`text-sm font-medium ${item.stock < item.minLevel ? 'text-red-600' : 'text-gray-900'}`}>
+                      <span className={`text-sm font-medium ${isLowStock(item.stock, item.minLevel) ? 'text-red-600' : 'text-gray-900'}`}>
                         {item.stock}
                       </span>
                     </div>
                   </td>
                   <td className="py-4 px-4 text-sm text-gray-600">{item.expiry}</td>
                   <td className="py-4 px-4">
-                    {item.stock < item.minLevel ? (
+                    {isLowStock(item.stock, item.minLevel) ? (
                       <span className="flex items-center gap-1 text-red-600 text-sm font-medium">
                         <AlertCircle className="w-4 h-4" />
                         Low Stock
@@ -107,6 +127,94 @@ const Inventory = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards - Visible only on mobile */}
+        <div className="md:hidden space-y-3">
+          {inventory.map((item) => (
+            <div 
+              key={item.id} 
+              className={`border rounded-lg overflow-hidden ${isLowStock(item.stock, item.minLevel) ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}
+            >
+              <div 
+                className="p-4 cursor-pointer"
+                onClick={() => toggleCard(item.id)}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-mono text-gray-500">{item.id}</span>
+                      {isLowStock(item.stock, item.minLevel) ? (
+                        <span className="flex items-center gap-1 text-red-600 text-xs font-medium">
+                          <AlertCircle className="w-3 h-3" />
+                          Low
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-green-600 text-xs font-medium">
+                          <CheckCircle className="w-3 h-3" />
+                          OK
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-medium text-gray-900 text-sm truncate">{item.name}</p>
+                    <p className="text-xs text-gray-500">{item.supplier}</p>
+                    
+                    {/* Stock Progress Bar - Mobile */}
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                        <div 
+                          className={`h-1.5 rounded-full ${isLowStock(item.stock, item.minLevel) ? 'bg-red-500' : 'bg-green-500'}`}
+                          style={{ width: `${getStockPercentage(item.stock, item.minLevel)}%` }}
+                        ></div>
+                      </div>
+                      <span className={`text-xs font-medium ${isLowStock(item.stock, item.minLevel) ? 'text-red-600' : 'text-gray-700'}`}>
+                        {item.stock}/{item.minLevel}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-1">
+                    {expandedCard === item.id ? (
+                      <ChevronUp className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                    )}
+                  </div>
+                </div>
+                
+                {/* Expanded Details */}
+                {expandedCard === item.id && (
+                  <div className="mt-3 pt-3 border-t border-gray-200/50 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Category:</span>
+                      <span className="text-gray-700">{item.category}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Batch:</span>
+                      <span className="font-mono text-gray-700">{item.batch}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Stock:</span>
+                      <span className={`font-medium ${isLowStock(item.stock, item.minLevel) ? 'text-red-600' : 'text-gray-700'}`}>
+                        {item.stock} units
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Min Level:</span>
+                      <span className="text-gray-700">{item.minLevel} units</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Expiry:</span>
+                      <span className="text-gray-700">{item.expiry}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Supplier:</span>
+                      <span className="text-gray-700">{item.supplier}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
     </div>

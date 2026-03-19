@@ -18,10 +18,12 @@ import {
   Database,
   ChevronDown,
   ChevronRight,
-  Activity
+  Activity,
+  X,
+  LogOut
 } from 'lucide-react';
 
-const Sidebar = ({ user }) => {
+const Sidebar = ({ user, isMobile, onClose, onLogout }) => {
   const [expanded, setExpanded] = useState({
     opd: true,
     pharmacy: false,
@@ -31,6 +33,12 @@ const Sidebar = ({ user }) => {
 
   const toggleSection = (section) => {
     setExpanded(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const handleNavClick = () => {
+    if (isMobile && onClose) {
+      onClose();
+    }
   };
 
   const navLinkClass = ({ isActive }) => 
@@ -47,120 +55,147 @@ const Sidebar = ({ user }) => {
         : 'text-gray-500 hover:text-blue-600 hover:bg-gray-50'
     }`;
 
+  const menuSections = [
+    {
+      id: 'opd',
+      label: 'OPD / IPD',
+      icon: Users,
+      links: [
+        { to: '/opd', label: 'Outpatient Dashboard' },
+        { to: '/ipd', label: 'Inpatient Dashboard' },
+        { to: '/beds', label: 'Bed Allocation' },
+        { to: '/queue', label: 'Patient Queue' },
+      ]
+    },
+    {
+      id: 'pharmacy',
+      label: 'Pharmacy',
+      icon: Pill,
+      links: [
+        { to: '/pharmacy', label: 'Pharmacy Dashboard' },
+        { to: '/inventory', label: 'Inventory' },
+        { to: '/prescriptions', label: 'Prescription Sync' },
+        { to: '/expiry', label: 'Expiry Management' },
+      ]
+    },
+    {
+      id: 'lab',
+      label: 'Laboratory',
+      icon: FlaskConical,
+      links: [
+        { to: '/laboratory', label: 'Lab Dashboard' },
+        { to: '/samples', label: 'Sample Tracking' },
+        { to: '/machines', label: 'Machine Interface' },
+        { to: '/reports', label: 'Report Generation' },
+      ]
+    },
+    {
+      id: 'radiology',
+      label: 'Radiology',
+      icon: Scan,
+      links: [
+        { to: '/radiology', label: 'Radiology Dashboard' },
+        { to: '/pacs', label: 'PACS Viewer' },
+        { to: '/dicom', label: 'DICOM Manager' },
+      ]
+    }
+  ];
+
   return (
-    <div className="w-64 bg-white border-r border-gray-200 fixed h-full shadow-lg z-10">
-      <div className="p-6 border-b border-gray-200">
+    <div className="h-full flex flex-col bg-white">
+      {/* Header - Logo + Close Button */}
+      <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
-            <Activity className="w-6 h-6 text-white" />
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">MedCore</h1>
-            <p className="text-xs text-gray-500">Hospital Management</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">MedCore</h1>
+            <p className="text-xs text-gray-500 hidden sm:block">Hospital Management</p>
           </div>
         </div>
+        
+        {/* Mobile Close Button */}
+        {isMobile && (
+          <button 
+            onClick={onClose}
+            className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors lg:hidden"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
-      <nav className="mt-4">
-        {/* OPD/IPD Section */}
-        <div className="mb-2">
-          <button 
-            onClick={() => toggleSection('opd')}
-            className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-          >
-            <div className="flex items-center gap-3">
-              <Users className="w-5 h-5" />
-              <span>OPD / IPD</span>
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-2">
+        {menuSections.map((section) => {
+          const Icon = section.icon;
+          const isExpanded = expanded[section.id];
+          
+          return (
+            <div key={section.id} className="mb-1">
+              <button 
+                onClick={() => toggleSection(section.id)}
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="truncate">{section.label}</span>
+                </div>
+                {isExpanded ? (
+                  <ChevronDown className="w-4 h-4 flex-shrink-0 ml-2" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 flex-shrink-0 ml-2" />
+                )}
+              </button>
+              
+              {isExpanded && (
+                <div className="bg-gray-50/50">
+                  {section.links.map((link) => (
+                    <NavLink 
+                      key={link.to}
+                      to={link.to} 
+                      onClick={handleNavClick}
+                      className={subNavLinkClass}
+                    >
+                      {link.label}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
             </div>
-            {expanded.opd ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </button>
-          {expanded.opd && (
-            <div className="bg-gray-50">
-              <NavLink to="/opd" className={subNavLinkClass}>Outpatient Dashboard</NavLink>
-              <NavLink to="/ipd" className={subNavLinkClass}>Inpatient Dashboard</NavLink>
-              <NavLink to="/beds" className={subNavLinkClass}>Bed Allocation</NavLink>
-              <NavLink to="/queue" className={subNavLinkClass}>Patient Queue</NavLink>
-            </div>
-          )}
-        </div>
-
-        {/* Pharmacy Section */}
-        <div className="mb-2">
-          <button 
-            onClick={() => toggleSection('pharmacy')}
-            className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-          >
-            <div className="flex items-center gap-3">
-              <Pill className="w-5 h-5" />
-              <span>Pharmacy</span>
-            </div>
-            {expanded.pharmacy ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </button>
-          {expanded.pharmacy && (
-            <div className="bg-gray-50">
-              <NavLink to="/pharmacy" className={subNavLinkClass}>Pharmacy Dashboard</NavLink>
-              <NavLink to="/inventory" className={subNavLinkClass}>Inventory</NavLink>
-              <NavLink to="/prescriptions" className={subNavLinkClass}>Prescription Sync</NavLink>
-              <NavLink to="/expiry" className={subNavLinkClass}>Expiry Management</NavLink>
-            </div>
-          )}
-        </div>
-
-        {/* Laboratory Section */}
-        <div className="mb-2">
-          <button 
-            onClick={() => toggleSection('lab')}
-            className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-          >
-            <div className="flex items-center gap-3">
-              <FlaskConical className="w-5 h-5" />
-              <span>Laboratory</span>
-            </div>
-            {expanded.lab ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </button>
-          {expanded.lab && (
-            <div className="bg-gray-50">
-              <NavLink to="/laboratory" className={subNavLinkClass}>Lab Dashboard</NavLink>
-              <NavLink to="/samples" className={subNavLinkClass}>Sample Tracking</NavLink>
-              <NavLink to="/machines" className={subNavLinkClass}>Machine Interface</NavLink>
-              <NavLink to="/reports" className={subNavLinkClass}>Report Generation</NavLink>
-            </div>
-          )}
-        </div>
-
-        {/* Radiology Section */}
-        <div className="mb-2">
-          <button 
-            onClick={() => toggleSection('radiology')}
-            className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-          >
-            <div className="flex items-center gap-3">
-              <Scan className="w-5 h-5" />
-              <span>Radiology</span>
-            </div>
-            {expanded.radiology ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </button>
-          {expanded.radiology && (
-            <div className="bg-gray-50">
-              <NavLink to="/radiology" className={subNavLinkClass}>Radiology Dashboard</NavLink>
-              <NavLink to="/pacs" className={subNavLinkClass}>PACS Viewer</NavLink>
-              <NavLink to="/dicom" className={subNavLinkClass}>DICOM Manager</NavLink>
-            </div>
-          )}
-        </div>
+          );
+        })}
       </nav>
 
-      <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 bg-gray-50">
+      {/* Footer - User Info */}
+      <div className="border-t border-gray-200 bg-gray-50 p-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-            <span className="text-sm font-semibold text-blue-600">
-              {user?.name?.charAt(0) || 'U'}
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center flex-shrink-0">
+            <span className="text-sm sm:text-base font-bold text-white">
+              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
-            <p className="text-xs text-gray-500 truncate">{user?.role}</p>
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {user?.name || 'Unknown User'}
+            </p>
+            <p className="text-xs text-gray-500 truncate capitalize">
+              {user?.role || 'Staff'}
+            </p>
           </div>
+          
+          {/* Mobile Logout Button */}
+          {isMobile && onLogout && (
+            <button 
+              onClick={onLogout}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              aria-label="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
     </div>
